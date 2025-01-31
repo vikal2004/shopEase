@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken"
-import User from "../models/user.model.js"
+import { User }from "../models/user.model.js"
 const authMiddleware=async(req, res, next)=>{
   try {
   const authHeader=req.headers.authorization;
@@ -15,9 +15,9 @@ const authMiddleware=async(req, res, next)=>{
     const decodedToken=jwt.verify(token, process.env.JWT_SECRET_KEY)
     
     const id=decodedToken.userId;
-
+   
     //find user and exclude password field
-    const user=await User.findOne(id).select("-password")
+    const user=await User.findById(id).select("-password")
     
     req.user=user;
    

@@ -7,7 +7,7 @@ import userRouter from "./routes/user.route.js";
 import orderRouter from "./routes/order.route.js";
 import cartRouter from "./routes/cart.route.js";
 import wishlistRouter from "./routes/wishlist.route.js";
-import productRouter from "./routes/product.js";
+import productRouter from "./routes/product.route.js";
 import reviewRouter from "./routes/review.route.js";
 const app=express();
 import 'dotenv/config'
