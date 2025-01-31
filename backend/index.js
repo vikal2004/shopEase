@@ -1,11 +1,27 @@
 import express from "express"
+import bodyParser from "body-parser";
+import cors from "cors"
 import { connectDB } from "./db/index.js";
+import authRouter from "./routes/auth.route.js";
+import userRouter from "./routes/user.route.js";
+import orderRouter from "./routes/order.route.js";
+import cartRouter from "./routes/cart.route.js";
+import wishlistRouter from "./routes/wishlist.route.js";
+import productRouter from "./routes/product.js";
+import reviewRouter from "./routes/review.route.js";
 const app=express();
 import 'dotenv/config'
 const PORT=process.env.PORT
 
-app.use(express.json());
-
+app.use(cors())
+app.use(bodyParser.json());
+app.use('/api/auth',authRouter);
+app.use('/api/users',userRouter);
+app.use('/api/products', productRouter);
+app.use('/api/carts', cartRouter);
+app.use('/api/orders', orderRouter);
+app.use('/api/reviews', reviewRouter);
+app.use('/api/wishlist', wishlistRouter)
 connectDB();
 
 app.get("/",(req, res)=>{
