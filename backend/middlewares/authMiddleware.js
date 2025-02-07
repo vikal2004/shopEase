@@ -1,31 +1,22 @@
+import { User } from "../models/user.model.js";
+import { ApiError } from "../utils/ApiError.js";
 import jwt from "jsonwebtoken"
-import { User }from "../models/user.model.js"
 const authMiddleware=async(req, res, next)=>{
-  try {
-  const authHeader=req.headers.authorization;
-  if( !authHeader || !authHeader.startsWith("Bearer ")){
-    return res.status(401).json({
-      message:"Authorization failed no token access"
-    })
+ try {
+  const token= req.header("Authorization").replace("Bearer ", "");
+  if(!token){
+   throw new ApiError(401, "unauthorized request");
   }
-    //checking if token is null 
-    const token=authHeader.split(" ")[1];
-    
-    //verify if the token is verify or not
-    const decodedToken=jwt.verify(token, process.env.JWT_SECRET_KEY)
-    
-    const id=decodedToken.userId;
-   
-    //find user and exclude password field
-    const user=await User.findById(id).select("-password")
-    
-    req.user=user;
-   
-   next();
-
-  } catch (error) {
-    console.error("Unauthorized user", error);
-    return res.status(500).json({message:"Internel server Error"})
-  }
+ 
+  const decodedToken=jwt.verify(token, process.env.JWT_SECRET_KEY);
+ 
+  const user=await User.findById(decodedToken.userId).select("-password");
+ 
+  req.user=user;
+ 
+  next();
+ } catch (error) {
+  throw new ApiError(401, error?.message || "Invalid access token")
+ }
 }
 export default authMiddleware;

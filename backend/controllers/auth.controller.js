@@ -1,82 +1,107 @@
- import {User} from "../models/user.model.js"
- import bcrypt from "bcrypt"
- import jwt from "jsonwebtoken"
- 
- export const registerUser=async (req, res)=>{
-   const {name, email , password, role}=req.body;
-     console.log(name);
-   if (!name || !email || !password || !role ){
-      return res.status(422).json({
-        message:"please enter all fields"
-      })
-   }
- try {
-   //check if the user is already exists
-   const existingUser=await User.findOne({email});
-   
-   if(existingUser){
-     return res.status(409).json({message:"User already exists"})
-   }
+import { User } from "../models/user.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import bcrypt from "bcrypt"
+import { ApiResponse } from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken"
+export const registerUser=asyncHandler( async( req, res)=>{
+  //write all the steps
+  //get user's details from frontend
+  //validate details
+  //check whether user already exist or not
+  //password hashed
+  //create entry in database
+  //jo user return karega database uski id leke database ko req maro aur user lo bina pass ke
+  //return success response
+  const {name, email, password, role}=req.body;
+  if(
+    [name, email, password, role].some((field)=>field?.trim()==="")
+  ){
+    throw new ApiError(400, "All fields are required");
+  }
+  
+  //check user in the db
+  const existedUser=await User.findOne({
+    $or: [{name},{email}]
+  }) 
 
-   //hash the password
-   const hashedPassword=await bcrypt.hash(password, 10);
+  if(existedUser){
+    throw new ApiError(409, "user with this email and username already exists")
+  }
 
-   //create new User
-   const newUser=new User({
+  const hashedPassword=await bcrypt.hash(password, 10);
+
+  const user=await User.create({
     name,
     email,
     password:hashedPassword,
     role:"customer"
-   })
+  })
+  console.log(user);
 
-   await newUser.save();
+  const createdUser=await User.findById(user._id).select("-password")
+  if(!createdUser){
+    throw new Error(500,"something went wrong while registering the user")
+  }
 
-   //success response
-   return res.status(201).json({message:"User registered successfully"})
+  return res.status(201).json(
+    new ApiResponse(200, createdUser, "user created successfully")
+  )
 
- } catch (error) {
-    console.error("Registration Error", error);
-    return res.status(500).json({message:"Internal server Error"})
- }
-}
+})
 
-export const loginUser=async(req, res)=>{
+export const loginUser=asyncHandler(async(req, res)=>{
+  //get user details from frontend
+  //validate the details
+  //check whether user exist or not
+  //compare password
+  //create token
+  //make a db call and return the user without pass field
+  //send the responses
 
   const {email, password}=req.body;
-  if(!email || !password ){
-     return res.status(422).json({message:"Please Enter all fields"});
+
+  if([email, password].some((field)=>field?.trim()=="")){
+    throw new ApiError(400, "all fields required");
   }
-
- try {
-
   const user=await User.findOne({email});
+  
   if(!user){
-    return res.status(401).json({message:"User does'nt exists"});
+    throw new ApiError(409, "user does'nt find")
   }
 
-  //compare password to already exist password
   const isMatch=await bcrypt.compare(password, user.password);
   if(!isMatch){
-    return res.status(401).json({message:"wrong password"})
+    throw new ApiError(409, "password does'nt match")
   }
-  
-  //generate jwt token 
-  const token=jwt.sign({
-   userId:user._id,
-   role:user.role
-  }, process.env.JWT_SECRET_KEY, {expiresIn:"7d"});
-  
-  //fetch user again without password
-  const userwithoutPass=await User.findById(user._id).select("-password")
-  
-  return res.status(201).json({
-    message:"Login successfully",
-    user:userwithoutPass,
-    token:token
-  })
 
- } catch (error) {
-   console.error("user can't login", error);
-   return res.status(500).json({message:"Internel server error"})
- }
-}
+  const token= jwt.sign({
+    userId:user._id,
+    name:user.name,
+    email:user.email,
+    role:user.role
+  }, process.env.JWT_SECRET_KEY)
+   
+  const LoggedinUser=await User.findById(user._id).select("-password");
+  console.log(LoggedinUser)
+  if(!LoggedinUser){
+    throw new ApiError(409, "user with existing user_id does not exist")
+  }
+
+  res.status(201).json({
+    message:"user Loggedin successfully",
+    user:LoggedinUser,
+    token
+  })
+  
+
+
+})
+
+// export const logoutUser=asyncHandler(async(req, res)=>{
+//   //clear the localStorage
+
+//   //send the successresponse
+// })
+
+

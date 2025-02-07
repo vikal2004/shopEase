@@ -42,12 +42,7 @@ export const updateUserProfile=async(req, res)=>{
  }
 }
 export const deleteUserProfile=async(req, res)=>{
- try {
-    const id=req.user._id;
-    await User.findByIdAndDelete(id);
-    return res.status(201).json({message:"User deleted successfully"})
- } catch (error) {
-    console.log("Unable to delete user profile")
-    return res.status(500).json({message:"Internel server error"})
- }
+ res.status(201).json({
+    message:"delete user successfully"
+ })
 }
