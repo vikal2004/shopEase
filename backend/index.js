@@ -1,4 +1,5 @@
 import express from "express"
+import 'dotenv/config'
 import cookieParser from "cookie-parser"
 import cors from "cors"
 import { connectDB } from "./db/index.js";
@@ -10,7 +11,6 @@ import wishlistRouter from "./routes/wishlist.route.js";
 import productRouter from "./routes/product.route.js";
 import reviewRouter from "./routes/review.route.js";
 const app=express();
-import 'dotenv/config'
 const PORT=process.env.PORT
 
 app.use(cors());
